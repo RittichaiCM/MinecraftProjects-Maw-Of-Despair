@@ -1,0 +1,23 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "mawofdespair:demon_maw",
+      "materials": { "default": "entity_alphatest" },
+      "textures": { "default": "textures/entity/zombie/zombie" },
+      "geometry": { "default": "geometry.mawofdespair.placeholder" },
+      "animations": {
+        "idle": "animation.mawofdespair.idle",
+        "awake": "animation.mawofdespair.awake",
+        "death": "animation.mawofdespair.death",
+        "controller": "controller.animation.mawofdespair"
+      },
+      "scripts": { "animate": ["controller"] },
+      "render_controllers": ["controller.render.default"],
+      "spawn_egg": {
+        "base_color": "#3B1010",
+        "overlay_color": "#D6A044"
+      }
+    }
+  }
+}

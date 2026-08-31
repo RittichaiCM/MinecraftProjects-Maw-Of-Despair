@@ -30,3 +30,7 @@ desktop.ini
 *.tmp
 *.temp
 ~$*
+
+# Local JavaScript dependencies and build output
+node_modules/
+dist/

@@ -1,0 +1,9 @@
+{
+  "resource_pack_name": "Maw of Despair",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "demon_maw_core": {
+      "textures": "textures/items/ender_pearl"
+    }
+  }
+}
