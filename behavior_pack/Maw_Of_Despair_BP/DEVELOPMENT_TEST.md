@@ -54,7 +54,8 @@ Use a disposable flat area. Placement intentionally overwrites a circular
 ## Content Log checks
 
 - Both packs load with no manifest dependency error.
-- Script prints `Stable Script API loaded. Version 0.2.0-dev.`
+- Normal gameplay does not print development status messages to the Content Log.
+- Genuine script failures still include a `[Maw of Despair]` error entry in the Content Log.
 - `mawofdespair:demon_maw` has a visible placeholder model and boss bar.
 - No errors mention `setBlockType`, `applyImpulse`, dynamic properties, or loot.
 - Each barrel receives an independent randomized loot roll through the Stable Script API; Beta APIs are not required.

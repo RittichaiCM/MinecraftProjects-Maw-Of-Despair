@@ -91,10 +91,6 @@ const stateRuntime = {
   nextNaturalSpawnAtMs: 0
 };
 
-function log(message) {
-  console.warn(`[${ADDON_NAME}] ${message}`);
-}
-
 function reportError(context, error) {
   const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
   console.warn(`[${ADDON_NAME}] ${context} failed: ${message}`);
@@ -444,7 +440,6 @@ function tryNaturalSpawnNear(player) {
     solidBlock: candidate.solidBlock,
     coverBlock: candidate.coverBlock
   });
-  log(`Natural encounter spawned in ${player.dimension.id} at ${candidate.center.x} ${candidate.center.y} ${candidate.center.z}.`);
   return candidate;
 }
 
@@ -468,7 +463,6 @@ function updateNaturalSpawning() {
   try {
     if (!tryNaturalSpawnNear(player)) {
       scheduleNextNaturalSpawn(NATURAL_RETRY_MIN_MS, NATURAL_RETRY_MAX_MS);
-      log("Natural spawn postponed: no loaded, mostly flat natural land surface was found.");
     }
   } catch (error) {
     reportError("creating a natural encounter", error);
@@ -501,7 +495,6 @@ function placeEncounter(player) {
     player.sendMessage("§aDemon Maw test arena created.");
     player.sendMessage("§7Walk toward the center to begin the encounter.");
     player.sendMessage("§8Developer note: placement intentionally overwrites a 19×7×19 test area.");
-    log(`Encounter placed at ${dimension.id} ${center.x} ${center.y} ${center.z}.`);
   } catch (error) {
     reportError("placing encounter", error);
     player.sendMessage(`§cCould not place Demon Maw: ${error}`);
@@ -954,11 +947,7 @@ function buildStomach(dimension, state) {
     { x: x + 4, y: y + 1, z: z + 2 },
     { x, y: y + 1, z: z + 7 }
   ];
-  const totalStacks = barrels.reduce(
-    (total, location) => total + fillStomachBarrel(dimension, location),
-    0
-  );
-  log(`Filled ${barrels.length} stomach barrels with ${totalStacks} item stacks.`);
+  for (const location of barrels) fillStomachBarrel(dimension, location);
 }
 
 function buildStomachAccess(dimension, state) {
@@ -1028,7 +1017,6 @@ function maintainActiveMaw(dimension, state) {
     restoredMaw.triggerEvent("mawofdespair:awaken");
     stateRuntime.mawMissingSinceMs = 0;
     stateRuntime.mawStateInitialized = false;
-    log("Restored an active Demon Maw after its chunk finished loading.");
   } catch (error) {
     stateRuntime.mawMissingSinceMs = Date.now();
     reportError("restoring active maw", error);
@@ -1158,7 +1146,6 @@ function handleScriptEvent(event) {
   if (!event.id.startsWith("mawofdespair:")) return;
   const player = event.sourceEntity;
   if (!player || player.typeId !== "minecraft:player") {
-    log(`${event.id} requires a player source.`);
     return;
   }
 
@@ -1305,7 +1292,6 @@ world.afterEvents.entityDie.subscribe((event) => {
 system.run(() => {
   loadState();
   loadNaturalSpawnSchedule();
-  log(`Stable Script API loaded. Version ${ADDON_VERSION}.`);
 });
 
 system.runInterval(updateEncounter, TICK_INTERVAL);
