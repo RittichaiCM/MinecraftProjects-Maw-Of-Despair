@@ -1,53 +1,62 @@
 {
   "format_version": "1.8.0",
   "animations": {
-    "animation.mawofdespair.idle": {
-      "loop": true,
-      "animation_length": 2.0,
+    "animation.mawofdespair.open": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.5,
       "bones": {
-        "root": {
-          "position": {
+        "right": {
+          "rotation": {
             "0.0": [0, 0, 0],
-            "1.0": [0, 0.25, 0],
-            "2.0": [0, 0, 0]
+            "0.5": [0, 0, -75]
+          }
+        },
+        "left": {
+          "rotation": {
+            "0.0": [0, 0, 0],
+            "0.5": [0, 0, 75]
           }
         }
       }
     },
-    "animation.mawofdespair.awake": {
-      "loop": true,
-      "animation_length": 1.6,
+    "animation.mawofdespair.close": {
+      "animation_length": 0.5,
       "bones": {
-        "upper_jaw": {
+        "right": {
           "rotation": {
-            "0.0": [-38, 0, 0],
-            "0.8": [-50, 0, 0],
-            "1.6": [-38, 0, 0]
+            "0.0": [0, 0, -75],
+            "0.5": [0, 0, 0]
           }
         },
-        "lower_jaw": {
+        "left": {
           "rotation": {
-            "0.0": [8, 0, 0],
-            "0.8": [13, 0, 0],
-            "1.6": [8, 0, 0]
-          }
-        },
-        "tongue": {
-          "rotation": {
-            "0.0": [0, 0, -3],
-            "0.8": [0, 0, 3],
-            "1.6": [0, 0, -3]
+            "0.0": [0, 0, 75],
+            "0.5": [0, 0, 0]
           }
         }
       }
     },
-    "animation.mawofdespair.death": {
-      "loop": false,
+    "animation.mawofdespair.bite": {
+      "loop": true,
       "animation_length": 1.0,
       "bones": {
-        "root": {
-          "rotation": { "0.0": [0, 0, 0], "1.0": [0, 0, 18] },
-          "position": { "0.0": [0, 0, 0], "1.0": [0, -5, 0] }
+        "right": {
+          "rotation": {
+            "0.0": [0, 0, 0],
+            "0.25": [0, 0, -75],
+            "0.5": [0, 0, 0],
+            "0.75": [0, 0, -75],
+            "1.0": [0, 0, 0]
+          }
+        },
+        "left": {
+          "rotation": {
+            "0.0": [0, 0, 0],
+            "0.25": [0, 0, 75],
+            "0.5": [0, 0, 0],
+            "0.75": [0, 0, 75],
+            "1.0": [0, 0, 0]
+          }
         }
       }
     }

@@ -11,6 +11,11 @@
           "type": "bool",
           "default": false,
           "client_sync": true
+        },
+        "mawofdespair:open": {
+          "type": "bool",
+          "default": false,
+          "client_sync": true
         }
       }
     },
@@ -58,6 +63,16 @@
       "mawofdespair:sleep": {
         "set_property": {
           "mawofdespair:awake": false
+        }
+      },
+      "mawofdespair:open": {
+        "set_property": {
+          "mawofdespair:open": true
+        }
+      },
+      "mawofdespair:close": {
+        "set_property": {
+          "mawofdespair:open": false
         }
       }
     }

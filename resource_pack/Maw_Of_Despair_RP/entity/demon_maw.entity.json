@@ -4,12 +4,12 @@
     "description": {
       "identifier": "mawofdespair:demon_maw",
       "materials": { "default": "entity_alphatest" },
-      "textures": { "default": "textures/entity/zombie/zombie" },
-      "geometry": { "default": "geometry.mawofdespair.placeholder" },
+      "textures": { "default": "textures/entity/demon_maw" },
+      "geometry": { "default": "geometry.mawofdespair.demon_maw" },
       "animations": {
-        "idle": "animation.mawofdespair.idle",
-        "awake": "animation.mawofdespair.awake",
-        "death": "animation.mawofdespair.death",
+        "closed": "animation.mawofdespair.close",
+        "bite": "animation.mawofdespair.bite",
+        "death": "animation.mawofdespair.open",
         "controller": "controller.animation.mawofdespair"
       },
       "scripts": { "animate": ["controller"] },
