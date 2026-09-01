@@ -14,7 +14,7 @@ const WARNING_MS = 3000;
 const STOMACH_LAYOUT_VERSION = 5;
 const TICK_INTERVAL = 4;
 const BITE_RADIUS = 1.85;
-const LIVING_BITE_RADIUS = 2.65;
+const LIVING_BITE_RADIUS = 2.00;
 const BITE_DAMAGE = 12;
 const MAW_RESTORE_DELAY_MS = 5000;
 const ACTIVE_SOUND_INTERVAL_TICKS = 60;
@@ -126,6 +126,27 @@ function getDimension(dimensionId) {
     reportError(`opening dimension ${dimensionId}`, error);
     return undefined;
   }
+}
+
+function getBiomeId(dimension, location) {
+  try {
+    return dimension.getBiome(location).id;
+  } catch {
+    return undefined;
+  }
+}
+
+function formatIdentifier(identifier) {
+  if (!identifier) return "Unknown";
+  return identifier
+    .replace(/^minecraft:/, "")
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function formatBiome(identifier) {
+  return identifier ? `${formatIdentifier(identifier)} (§8${identifier}§f)` : "Unknown";
 }
 
 function isEligiblePlayer(player) {
@@ -265,6 +286,7 @@ function createEncounter(dimension, center, options = {}) {
   const surfaceBlock = options.surfaceBlock ?? "minecraft:red_sand";
   const solidBlock = options.solidBlock ?? "minecraft:red_sandstone";
   const coverBlock = options.coverBlock ?? solidBlock;
+  const biomeId = options.biomeId ?? getBiomeId(dimension, center);
 
   buildArena(dimension, center, surfaceBlock, solidBlock, coverBlock);
   spawnMaw(dimension, center);
@@ -275,6 +297,7 @@ function createEncounter(dimension, center, options = {}) {
     phaseStartedAtMs: Date.now(),
     stomachPrepared: false,
     natural: options.natural === true,
+    biomeId,
     surfaceBlock,
     solidBlock,
     coverBlock
@@ -369,6 +392,7 @@ function validateNaturalSpawnCandidate(player, x, z) {
   const centerTop = centerSurface.block;
   const centerPalette = naturalArenaPalette(centerTop.typeId);
   if (!centerPalette) return undefined;
+  const biomeId = getBiomeId(dimension, centerTop.location);
 
   const worldSpawn = world.getDefaultSpawnLocation();
   if (horizontalDistance({ x, z }, worldSpawn) < NATURAL_WORLD_SPAWN_EXCLUSION) {
@@ -404,6 +428,7 @@ function validateNaturalSpawnCandidate(player, x, z) {
 
   return {
     center: { x, y: maximumY, z },
+    biomeId,
     ...centerPalette
   };
 }
@@ -436,6 +461,7 @@ function tryNaturalSpawnNear(player) {
 
   createEncounter(player.dimension, candidate.center, {
     natural: true,
+    biomeId: candidate.biomeId,
     surfaceBlock: candidate.surfaceBlock,
     solidBlock: candidate.solidBlock,
     coverBlock: candidate.coverBlock
@@ -1142,6 +1168,44 @@ function handleMawDefeated(state, dimension) {
   }
 }
 
+function sendEncounterStatus(player) {
+  const playerLocation = {
+    x: Math.floor(player.location.x),
+    y: Math.floor(player.location.y),
+    z: Math.floor(player.location.z)
+  };
+  const playerBiomeId = getBiomeId(player.dimension, player.location);
+
+  player.sendMessage(`§6--- Demon Maw ${ADDON_VERSION} Status ---`);
+  player.sendMessage(`§7Player location: §f${playerLocation.x} ${playerLocation.y} ${playerLocation.z} §8(${player.dimension.id})`);
+  player.sendMessage(`§7Player biome: §f${formatBiome(playerBiomeId)}`);
+
+  const state = stateRuntime.state;
+  if (!state) {
+    const remainingSeconds = Math.max(
+      0,
+      Math.ceil((stateRuntime.nextNaturalSpawnAtMs - Date.now()) / 1000)
+    );
+    player.sendMessage("§7Existing Demon Maw: §fNone");
+    player.sendMessage(`§7Next natural attempt: §f${remainingSeconds}s`);
+    return;
+  }
+
+  let mawBiomeId = state.biomeId;
+  if (!mawBiomeId) {
+    const mawDimension = getDimension(state.dimensionId);
+    mawBiomeId = mawDimension ? getBiomeId(mawDimension, state.center) : undefined;
+    if (mawBiomeId) {
+      state.biomeId = mawBiomeId;
+      saveState();
+    }
+  }
+
+  player.sendMessage(`§7Existing Demon Maw: §f${state.center.x} ${state.center.y} ${state.center.z} §8(${state.dimensionId})`);
+  player.sendMessage(`§7Maw biome: §f${formatBiome(mawBiomeId)}`);
+  player.sendMessage(`§7Phase: §f${state.phase} §7| Source: §f${state.natural ? "natural" : "developer"}`);
+}
+
 function handleScriptEvent(event) {
   if (!event.id.startsWith("mawofdespair:")) return;
   const player = event.sourceEntity;
@@ -1188,15 +1252,7 @@ function handleScriptEvent(event) {
         }
         break;
       case "mawofdespair:status":
-        if (stateRuntime.state) {
-          player.sendMessage(`§7Demon Maw ${ADDON_VERSION}: phase=§f${stateRuntime.state.phase}§7, location=§f${stateRuntime.state.center.x} ${stateRuntime.state.center.y} ${stateRuntime.state.center.z}§7, source=§f${stateRuntime.state.natural ? "natural" : "developer"}`);
-        } else {
-          const remainingSeconds = Math.max(
-            0,
-            Math.ceil((stateRuntime.nextNaturalSpawnAtMs - Date.now()) / 1000)
-          );
-          player.sendMessage(`§7Demon Maw ${ADDON_VERSION}: no encounter placed; next natural attempt in §f${remainingSeconds}s§7.`);
-        }
+        sendEncounterStatus(player);
         break;
       default:
         player.sendMessage("§7Commands: mawofdespair:place, spawn, reset, clear, trigger, status");

@@ -50,6 +50,7 @@ Use a disposable flat area. Placement intentionally overwrites a circular
 - `/scriptevent mawofdespair:clear` - clear the saved test encounter without restoring terrain.
 - `/scriptevent mawofdespair:trigger` - skip proximity activation.
 - `/scriptevent mawofdespair:status` - show saved phase and coordinates.
+- Status reports the player's block location/current biome plus the existing Maw's saved location, biome, phase, and source.
 
 ## Content Log checks
 
