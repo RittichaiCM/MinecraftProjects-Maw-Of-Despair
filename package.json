@@ -1,0 +1,14 @@
+{
+  "name": "maw-of-despair-bedrock-addon",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-release.ps1",
+    "check:script": "tsc -p jsconfig.json"
+  },
+  "devDependencies": {
+    "@minecraft/server": "2.8.0",
+    "typescript": "^5.9.2"
+  }
+}
