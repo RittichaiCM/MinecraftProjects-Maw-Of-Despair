@@ -1,0 +1,25 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.mawofdespair": {
+      "initial_state": "closed",
+      "states": {
+        "closed": {
+          "animations": ["closed"],
+          "transitions": [
+            { "death": "!query.is_alive" },
+            { "open": "query.property('mawofdespair:open')" }
+          ]
+        },
+        "open": {
+          "animations": ["bite"],
+          "transitions": [
+            { "death": "!query.is_alive" },
+            { "closed": "!query.property('mawofdespair:open')" }
+          ]
+        },
+        "death": { "animations": ["death"] }
+      }
+    }
+  }
+}

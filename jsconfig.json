@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "strict": false,
+    "skipLibCheck": true
+  },
+  "include": [
+    "behavior_pack/Maw_Of_Despair_BP/scripts/**/*.js"
+  ]
+}
+
+

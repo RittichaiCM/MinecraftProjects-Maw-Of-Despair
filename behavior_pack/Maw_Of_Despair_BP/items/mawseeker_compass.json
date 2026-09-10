@@ -1,0 +1,19 @@
+{
+  "format_version": "1.21.80",
+  "minecraft:item": {
+    "description": {
+      "identifier": "mawofdespair:mawseeker_compass",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:display_name": {
+        "value": "item.mawofdespair:mawseeker_compass.name"
+      },
+      "minecraft:icon": "mawseeker_compass_00",
+      "minecraft:max_stack_size": 1,
+      "minecraft:glint": true
+    }
+  }
+}
