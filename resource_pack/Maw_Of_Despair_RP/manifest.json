@@ -4,14 +4,14 @@
     "name": "Maw of Despair RP",
     "description": "Visual and localization assets for Maw of Despair.",
     "uuid": "8d94d035-7554-4abd-ad0a-7abf8f27c288",
-    "version": [0, 2, 0],
+    "version": [1, 0, 0],
     "min_engine_version": [1, 26, 30]
   },
   "modules": [
     {
       "type": "resources",
       "uuid": "d1d39988-e370-4a7d-85b6-3db8430baa71",
-      "version": [0, 2, 0]
+      "version": [1, 0, 0]
     }
   ],
   "metadata": {

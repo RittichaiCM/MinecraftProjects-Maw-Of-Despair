@@ -4,6 +4,54 @@
   "texture_data": {
     "demon_maw_core": {
       "textures": "textures/items/ender_pearl"
+    },
+    "mawseeker_compass_00": {
+      "textures": "textures/items/mawseeker_compass_00"
+    },
+    "mawseeker_compass_01": {
+      "textures": "textures/items/mawseeker_compass_01"
+    },
+    "mawseeker_compass_02": {
+      "textures": "textures/items/mawseeker_compass_02"
+    },
+    "mawseeker_compass_03": {
+      "textures": "textures/items/mawseeker_compass_03"
+    },
+    "mawseeker_compass_04": {
+      "textures": "textures/items/mawseeker_compass_04"
+    },
+    "mawseeker_compass_05": {
+      "textures": "textures/items/mawseeker_compass_05"
+    },
+    "mawseeker_compass_06": {
+      "textures": "textures/items/mawseeker_compass_06"
+    },
+    "mawseeker_compass_07": {
+      "textures": "textures/items/mawseeker_compass_07"
+    },
+    "mawseeker_compass_08": {
+      "textures": "textures/items/mawseeker_compass_08"
+    },
+    "mawseeker_compass_09": {
+      "textures": "textures/items/mawseeker_compass_09"
+    },
+    "mawseeker_compass_10": {
+      "textures": "textures/items/mawseeker_compass_10"
+    },
+    "mawseeker_compass_11": {
+      "textures": "textures/items/mawseeker_compass_11"
+    },
+    "mawseeker_compass_12": {
+      "textures": "textures/items/mawseeker_compass_12"
+    },
+    "mawseeker_compass_13": {
+      "textures": "textures/items/mawseeker_compass_13"
+    },
+    "mawseeker_compass_14": {
+      "textures": "textures/items/mawseeker_compass_14"
+    },
+    "mawseeker_compass_15": {
+      "textures": "textures/items/mawseeker_compass_15"
     }
   }
 }

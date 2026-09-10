@@ -3,6 +3,12 @@ import { BlockPermutation, ItemStack, system, world } from "@minecraft/server";
 const ADDON_NAME = "Maw of Despair";
 const ADDON_VERSION = "0.2.0-dev";
 const MAW_TYPE = "mawofdespair:demon_maw";
+const MAWSEEKER_COMPASS_TYPE = "mawofdespair:mawseeker_compass";
+const MAWSEEKER_COMPASS_VARIANTS = Array.from(
+  { length: 16 },
+  (_, index) => index === 0 ? MAWSEEKER_COMPASS_TYPE : `${MAWSEEKER_COMPASS_TYPE}_${String(index).padStart(2, "0")}`
+);
+const MAWSEEKER_COMPASS_TYPES = new Set(MAWSEEKER_COMPASS_VARIANTS);
 const STATE_KEY = "mawofdespair:encounter_state";
 const NEXT_NATURAL_SPAWN_KEY = "mawofdespair:next_natural_spawn";
 
@@ -27,12 +33,14 @@ const PULL_SHIFT_MIN_TICKS = 12;
 const PULL_SHIFT_MAX_TICKS = 32;
 const NATURAL_SPAWN_MIN_MS = 10 * 60 * 1000;
 const NATURAL_SPAWN_MAX_MS = 20 * 60 * 1000;
+const DEFEATED_RESPAWN_COOLDOWN_MS = 30 * 60 * 1000;
 const NATURAL_RETRY_MIN_MS = 60 * 1000;
 const NATURAL_RETRY_MAX_MS = 2 * 60 * 1000;
 const NATURAL_SPAWN_MIN_DISTANCE = 40;
 const NATURAL_SPAWN_MAX_DISTANCE = 64;
 const NATURAL_SPAWN_ATTEMPTS = 20;
 const NATURAL_WORLD_SPAWN_EXCLUSION = 96;
+const COMPASS_UPDATE_INTERVAL_TICKS = 4;
 
 const NATURAL_EARTH_BLOCKS = new Set([
   "minecraft:grass_block",
@@ -88,7 +96,8 @@ const stateRuntime = {
   playerInPit: false,
   pullStrengthMultiplier: 1,
   nextPullStrengthTick: 0,
-  nextNaturalSpawnAtMs: 0
+  nextNaturalSpawnAtMs: 0,
+  nextCompassUpdateTick: 0
 };
 
 function reportError(context, error) {
@@ -160,6 +169,132 @@ function isEligiblePlayer(player) {
 
 function horizontalDistance(a, b) {
   return Math.hypot(a.x - b.x, a.z - b.z);
+}
+
+function normalizeDegrees(angle) {
+  return ((angle + 180) % 360 + 360) % 360 - 180;
+}
+
+function directionArrow(relativeYaw) {
+  const arrows = ["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"];
+  const normalized = (normalizeDegrees(relativeYaw) + 360) % 360;
+  return arrows[Math.round(normalized / 45) % arrows.length];
+}
+
+function cardinalDirection(targetYaw) {
+  const directions = ["S", "SW", "W", "NW", "N", "NE", "E", "SE"];
+  const normalized = ((targetYaw % 360) + 360) % 360;
+  return directions[Math.round(normalized / 45) % directions.length];
+}
+
+function compassVariantIndex(relativeYaw) {
+  const normalized = (normalizeDegrees(relativeYaw) + 360) % 360;
+  return Math.round(normalized / (360 / MAWSEEKER_COMPASS_VARIANTS.length))
+    % MAWSEEKER_COMPASS_VARIANTS.length;
+}
+
+function heldMawseekerCompass(player) {
+  try {
+    const inventory = player.getComponent("minecraft:inventory")?.container;
+    const item = inventory?.getItem(player.selectedSlotIndex);
+    return inventory && item && MAWSEEKER_COMPASS_TYPES.has(item.typeId)
+      ? { inventory, item }
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function setHeldCompassVariant(player, heldCompass, variantIndex) {
+  const desiredType = MAWSEEKER_COMPASS_VARIANTS[variantIndex];
+  if (!desiredType || heldCompass.item.typeId === desiredType) return;
+
+  const replacement = new ItemStack(desiredType, 1);
+  replacement.nameTag = heldCompass.item.nameTag;
+  replacement.keepOnDeath = heldCompass.item.keepOnDeath;
+  replacement.lockMode = heldCompass.item.lockMode;
+
+  const lore = heldCompass.item.getRawLore();
+  if (lore.length > 0) replacement.setLore(lore);
+
+  /** @type {Record<string, boolean | number | string | import("@minecraft/server").Vector3>} */
+  const properties = {};
+  for (const identifier of heldCompass.item.getDynamicPropertyIds()) {
+    const value = heldCompass.item.getDynamicProperty(identifier);
+    if (value !== undefined) properties[identifier] = value;
+  }
+  if (Object.keys(properties).length > 0) replacement.setDynamicProperties(properties);
+
+  heldCompass.inventory.setItem(player.selectedSlotIndex, replacement);
+}
+
+function spinHeldCompass(player, heldCompass) {
+  const currentIndex = MAWSEEKER_COMPASS_VARIANTS.indexOf(heldCompass.item.typeId);
+  let variantIndex = randomInteger(0, MAWSEEKER_COMPASS_VARIANTS.length - 1);
+  if (variantIndex === currentIndex) {
+    variantIndex = (variantIndex + randomInteger(1, MAWSEEKER_COMPASS_VARIANTS.length - 1))
+      % MAWSEEKER_COMPASS_VARIANTS.length;
+  }
+  try {
+    setHeldCompassVariant(player, heldCompass, variantIndex);
+  } catch {
+    // The inventory can change while the compass update is running.
+  }
+}
+
+function updateMawseekerCompasses() {
+  if (system.currentTick < stateRuntime.nextCompassUpdateTick) return;
+  stateRuntime.nextCompassUpdateTick = system.currentTick + COMPASS_UPDATE_INTERVAL_TICKS;
+
+  const state = stateRuntime.state;
+  for (const player of world.getAllPlayers()) {
+    const heldCompass = heldMawseekerCompass(player);
+    if (!heldCompass) continue;
+
+    try {
+      if (!state) {
+        spinHeldCompass(player, heldCompass);
+        player.onScreenDisplay.setActionBar("§8◇ §7No Demon Maw can be sensed.");
+        continue;
+      }
+
+      if (state.phase === "defeated") {
+        spinHeldCompass(player, heldCompass);
+        player.onScreenDisplay.setActionBar("§8◇ §7No living Demon Maw can be sensed.");
+        continue;
+      }
+
+      if (player.dimension.id !== state.dimensionId) {
+        spinHeldCompass(player, heldCompass);
+        player.onScreenDisplay.setActionBar("§5◇ §dThe signal comes from another dimension.");
+        continue;
+      }
+
+      const target = { x: state.center.x + 0.5, z: state.center.z + 0.5 };
+      const dx = target.x - player.location.x;
+      const dz = target.z - player.location.z;
+      const distance = Math.round(Math.hypot(dx, dz));
+      const targetYaw = Math.atan2(-dx, dz) * 180 / Math.PI;
+      const relativeYaw = normalizeDegrees(targetYaw - player.getRotation().y);
+      setHeldCompassVariant(player, heldCompass, compassVariantIndex(relativeYaw));
+
+      // Leave the action bar available for combat hints once the encounter starts.
+      if ((state.phase === "warning" || state.phase === "active") && distance <= 24) continue;
+
+      if (distance <= 8) {
+        player.onScreenDisplay.setActionBar("§4◆ §cThe Maw is below you.");
+        continue;
+      }
+
+      const arrow = directionArrow(relativeYaw);
+      const cardinal = cardinalDirection(targetYaw);
+      player.onScreenDisplay.setActionBar(
+        `§4${arrow} §cDemon Maw §7• §f${cardinal} §7• §e${distance} blocks`
+      );
+    } catch {
+      // Players can leave while the interval is iterating; retry on the next update.
+    }
+  }
 }
 
 function sendTitle(player, title, subtitle = "") {
@@ -551,6 +686,7 @@ function resetEncounter(player) {
     state.phaseStartedAtMs = Date.now();
     state.stomachPrepared = false;
     delete state.stomachLayoutVersion;
+    delete state.nextRespawnAtMs;
     resetDormantRuntime();
     saveState();
     player.sendMessage("§aDemon Maw encounter reset.");
@@ -1102,7 +1238,35 @@ function updateBiteAudio(dimension, state) {
   }
 }
 
+function getDefeatedRespawnAtMs(state) {
+  if (typeof state.nextRespawnAtMs === "number" && Number.isFinite(state.nextRespawnAtMs)) {
+    return state.nextRespawnAtMs;
+  }
+
+  const defeatedAtMs = typeof state.phaseStartedAtMs === "number"
+    ? state.phaseStartedAtMs
+    : Date.now();
+  state.nextRespawnAtMs = defeatedAtMs + DEFEATED_RESPAWN_COOLDOWN_MS;
+  saveState();
+  return state.nextRespawnAtMs;
+}
+
+function updateDefeatedEncounter(dimension, state) {
+  if (Date.now() < getDefeatedRespawnAtMs(state)) {
+    prepareStomach(dimension, state);
+    return;
+  }
+
+  // Keep the defeated arena, throat, and stomach in the world as permanent
+  // landmarks, but release the global encounter slot for the next natural Maw.
+  stateRuntime.state = undefined;
+  resetDormantRuntime();
+  saveState();
+  scheduleNextNaturalSpawn(0, 0);
+}
+
 function updateEncounter() {
+  updateMawseekerCompasses();
   const state = stateRuntime.state;
   if (!state) {
     updateNaturalSpawning();
@@ -1129,7 +1293,7 @@ function updateEncounter() {
       pullTnt(dimension, state);
       updateActiveAudio(dimension, state);
     } else if (state.phase === "defeated") {
-      prepareStomach(dimension, state);
+      updateDefeatedEncounter(dimension, state);
     }
   } catch (error) {
     reportError("encounter tick", error);
@@ -1151,6 +1315,7 @@ function handleMawDefeated(state, dimension) {
   stateRuntime.nextPullStrengthTick = 0;
   state.phase = "defeated";
   state.phaseStartedAtMs = Date.now();
+  state.nextRespawnAtMs = state.phaseStartedAtMs + DEFEATED_RESPAWN_COOLDOWN_MS;
   state.stomachPrepared = false;
   delete state.stomachLayoutVersion;
   saveState();
@@ -1204,6 +1369,13 @@ function sendEncounterStatus(player) {
   player.sendMessage(`§7Existing Demon Maw: §f${state.center.x} ${state.center.y} ${state.center.z} §8(${state.dimensionId})`);
   player.sendMessage(`§7Maw biome: §f${formatBiome(mawBiomeId)}`);
   player.sendMessage(`§7Phase: §f${state.phase} §7| Source: §f${state.natural ? "natural" : "developer"}`);
+  if (state.phase === "defeated") {
+    const remainingSeconds = Math.max(
+      0,
+      Math.ceil((getDefeatedRespawnAtMs(state) - Date.now()) / 1000)
+    );
+    player.sendMessage(`§7Next Maw eligible in: §f${remainingSeconds}s`);
+  }
 }
 
 function handleScriptEvent(event) {
@@ -1254,8 +1426,17 @@ function handleScriptEvent(event) {
       case "mawofdespair:status":
         sendEncounterStatus(player);
         break;
+      case "mawofdespair:skipcooldown":
+        if (stateRuntime.state?.phase === "defeated") {
+          stateRuntime.state.nextRespawnAtMs = Date.now();
+          saveState();
+          player.sendMessage("§aDefeated cooldown skipped. A new natural spawn attempt is now eligible.");
+        } else {
+          player.sendMessage("§eThe current encounter is not in its defeated cooldown.");
+        }
+        break;
       default:
-        player.sendMessage("§7Commands: mawofdespair:place, spawn, reset, clear, trigger, status");
+        player.sendMessage("§7Commands: mawofdespair:place, spawn, reset, clear, trigger, status, skipcooldown");
     }
   });
 }
