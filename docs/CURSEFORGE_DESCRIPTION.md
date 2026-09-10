@@ -32,8 +32,22 @@ The Demon Maw is designed to become part of a normal Survival world.
 * It can appear on suitable land in **any Overworld biome**
 * Water, lava, tree canopies, and common constructed surfaces are avoided
 * The encounter is generated away from world spawn and near an active Survival player
-* Each world generates one Demon Maw encounter
+* Only one living Demon Maw can exist in the world at a time
 * A dormant Maw remains in the world until it is discovered
+* After a Maw is defeated, a **30-minute cooldown** begins before a new encounter can appear
+* Defeated arenas and stomach chambers remain as permanent landmarks
+
+***
+
+## Mawseeker Compass
+
+Craft a **Mawseeker Compass** to track the hidden encounter without revealing its exact coordinates.
+
+While held, its needle rotates toward the Demon Maw while the action bar displays a direction arrow, cardinal direction, and approximate distance. When no living Maw can be sensed—or when you travel to another dimension—the needle spins unpredictably and cannot be used to read a direction.
+
+Craft it with a vanilla Compass in the center, Rotten Flesh in the four corners, and Redstone Dust on the four sides.
+
+![Mawseeker Compass](PASTE_MAWSEEKER_COMPASS_IMAGE_OR_GIF_URL_HERE)
 
 ***
 
@@ -93,6 +107,7 @@ The Demon Maw can digest adventurers—but not everything they carried.
 * Original animated Demon Maw model with closed, biting, and defeated states
 * Dynamic boss bar, growls, bite sounds, and active suction audio
 * Naturally generated collapsing arena
+* Craftable Mawseeker Compass for locating the encounter
 * Unpredictable suction that grows stronger during the fight
 * Interaction with players, mobs, and animals
 * Persistence across world reloads and player respawns

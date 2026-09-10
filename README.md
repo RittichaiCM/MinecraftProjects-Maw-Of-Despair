@@ -16,3 +16,15 @@ Current milestone: playable scripted vertical slice using a placeholder model.
 
 See `behavior_pack/Maw_Of_Despair_BP/DEVELOPMENT_TEST.md` for the in-game test
 flow and developer commands.
+
+## Build a release
+
+Run the following command from the repository root:
+
+```powershell
+npm run build
+```
+
+The script validates that the package and both manifest versions match, removes
+development-only files, packages the behavior and resource packs, and writes a
+single upload-ready `.mcaddon` file to `dist/`.
